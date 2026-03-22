@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anillo — Job Operation Status</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface2: #f9f8f5;
+  --border: #e2e0d8;
+  --border-hi: #c8c5bc;
+  --osp-color: #c0501e;
+  --press-color: #1a6b3a;
+  --linsp-color: #1a4b8c;
+  --text: #1a1a18;
+  --text-muted: #6b6a64;
+  --text-dim: #b0ae a6;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.14), 0 4px 10px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.brand-sep { color: var(--border-hi); font-weight: 300; }
+
+.brand-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.company-chip {
+  background: #1a1a18;
+  color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+/* TOOLBAR */
+.toolbar {
+  padding: 10px 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+}
+
+.btn {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn:hover { border-color: var(--border-hi); color: var(--text); background: var(--surface); box-shadow: var(--shadow-sm); }
+
+.toolbar-sep { flex: 1; }
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 12px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.stat-dot {
+  width: 9px; height: 9px;
+  border-radius: 2px;
+}
+
+.stat strong { color: var(--text); font-weight: 600; }
+
+/* WORKSPACE */
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  overflow: hidden;
+}
+
+/* TABLE PANEL */
+.table-panel {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  background: var(--bg);
+  transition: background 0.2s;
+}
+.table-panel:last-child { border-right: none; }
+
+.table-panel.drag-over { background: #edf3ff; }
+
+/* Panel header */
+.panel-header {
+  padding: 16px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.accent-stripe {
+  width: 4px;
+  border-radius: 3px;
+  align-self: stretch;
+  min-height: 40px;
+  flex-shrink: 0;
+}
+
+.header-info { flex: 1; min-width: 0; }
+
+.table-id {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.table-fullname {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.table-ops {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.row-counter {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--border-hi);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Col headers */
+.col-header {
+  display: grid;
+  grid-template-columns: 26px 80px 1fr 80px 55px;
+  gap: 0;
+  padding: 5px 20px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 9px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+/* Panel body */
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* Drop state outline */
+.table-panel.drag-over .panel-body {
+  outline: 2px dashed #4d7fff;
+  outline-offset: -2px;
+}
+
+/* Empty state */
+.empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--border-hi);
+  pointer-events: none;
+}
+.empty-icon { font-size: 24px; opacity: 0.4; }
+
+/* DATA ROW */
+.data-row {
+  display: grid;
+  grid-template-columns: 26px 80px 1fr 80px 55px;
+  align-items: center;
+  height: 38px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: grab;
+  transition: background 0.1s, box-shadow 0.1s;
+  background: var(--surface);
+  user-select: none;
+}
+.data-row:last-child { border-bottom: none; }
+.data-row:hover { background: #fafaf7; }
+.data-row:hover .grip { opacity: 1; }
+.data-row.is-dragging { opacity: 0.3; }
+.data-row:active { cursor: grabbing; }
+
+.grip {
+  font-size: 13px;
+  color: var(--border-hi);
+  opacity: 0;
+  transition: opacity 0.12s;
+  line-height: 1;
+}
+
+.cell-job {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-part {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.op-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell-minoper {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* DRAG PHANTOM */
+#phantom {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  display: none;
+  background: white;
+  border: 1px solid #4d7fff;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+  transform: rotate(1deg);
+  white-space: nowrap;
+  gap: 10px;
+  align-items: center;
+  font-family: 'IBM Plex Mono', monospace;
+}
+#phantom.show { display: flex; }
+#ph-job { font-weight: 600; }
+#ph-part { color: var(--text-muted); font-size: 10px; }
+
+/* FOOTER */
+footer {
+  height: 32px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  font-size: 11px;
+  color: var(--text-muted);
+  gap: 16px;
+  flex-shrink: 0;
+}
+footer span { display: flex; align-items: center; gap: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-logo">Anillo</div>
+    <div class="brand-sep">|</div>
+    <div class="brand-sub">Job Operation Status</div>
+  </div>
+  <div class="header-right">
+    <div class="company-chip">AI</div>
+    <span>JobOperStatusExport · 197 records</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="btn" onclick="resetAll()">↺ Reset Data</button>
+  <button class="btn" onclick="sortByJob()">↕ Sort by Job #</button>
+  <div class="toolbar-sep"></div>
+  <div class="stats-row" id="stats-row"></div>
+</div>
+
+<div class="workspace" id="workspace"></div>
+
+<div id="phantom">
+  <span id="ph-job"></span>
+  <span id="ph-part"></span>
+</div>
+
+<footer>
+  <span>⠿ drag rows to reassign between resource groups</span>
+  <span style="margin-left:auto">Company: AI · Engine: JobOperStatusExport · 3 of 26 resource groups shown</span>
+</footer>
+
+<script>
+const RAW_DATA = {"OSP": [{"Company": "AI", "Job Number": "D6930", "Part": "NAS1149V1063M", "MinOper": 46, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-ALPHA"}, {"Company": "AI", "Job Number": "D6936", "Part": "NAS1149V0516H", "MinOper": 48, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-ALPHA"}, {"Company": "AI", "Job Number": "D6945", "Part": "NAS1149V0516M", "MinOper": 48, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-ALPHA"}, {"Company": "AI", "Job Number": "D7061", "Part": "SS5103V05REV6", "MinOper": 52, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-ALPHA"}, {"Company": "AI", "Job Number": "SH5013", "Part": "NAS1149V0316H", "MinOper": 47, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-ALPHA"}, {"Company": "AI", "Job Number": "D6956", "Part": "JSFW03-06V", "MinOper": 48, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-ANOD"}, {"Company": "AI", "Job Number": "D7357", "Part": "S1450-24A10-032Z", "MinOper": 10, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-ANOD"}, {"Company": "AI", "Job Number": "D4243", "Part": "NAS1149CN832B", "MinOper": 8, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-BLKOX"}, {"Company": "AI", "Job Number": "D2138", "Part": "NAS43DD0-123FC", "MinOper": 1, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-BUYOUT"}, {"Company": "AI", "Job Number": "D2141", "Part": "NAS1057W8-031", "MinOper": 1, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-BUYOUT"}, {"Company": "AI", "Job Number": "D2142", "Part": "NAS1057W9-029", "MinOper": 1, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-BUYOUT"}, {"Company": "AI", "Job Number": "D3351", "Part": "NAS1057W8-034", "MinOper": 1, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-BUYOUT"}, {"Company": "AI", "Job Number": "D7127", "Part": "NAS1057W4A-010", "MinOper": 1, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-BUYOUT"}, {"Company": "AI", "Job Number": "D5743", "Part": "140-007-24-20C4", "MinOper": 52, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-CAD"}, {"Company": "AI", "Job Number": "100075", "Part": "BACW10P219TF", "MinOper": 60, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-CDEBUR"}, {"Company": "AI", "Job Number": "D4709", "Part": "S1450-3-10-062C", "MinOper": 11, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-CHROM"}, {"Company": "AI", "Job Number": "D7037", "Part": "S1450-5-9-042C", "MinOper": 24, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-CHROM"}, {"Company": "AI", "Job Number": "D7052", "Part": "S1438-59", "MinOper": 16, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-DDGRND"}, {"Company": "AI", "Job Number": "D7107", "Part": "B0202026U1616-60", "MinOper": 28, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-DDGRND"}, {"Company": "AI", "Job Number": "D7314", "Part": "S8157CX593-060C", "MinOper": 15, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-DDGRND"}, {"Company": "AI", "Job Number": "D7334", "Part": "EDW14", "MinOper": 23, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-DDGRND"}, {"Company": "AI", "Job Number": "D7316", "Part": "S8157AG385-032", "MinOper": 18, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-DEBURR"}, {"Company": "AI", "Job Number": "D6671", "Part": "LSPW08-13NADCAP", "MinOper": 56, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-DFL"}, {"Company": "AI", "Job Number": "100120", "Part": "NSA5307-8C", "MinOper": 50, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-GRIND"}, {"Company": "AI", "Job Number": "100194", "Part": "NAS1149G0416P", "MinOper": 50, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-GRIND"}, {"Company": "AI", "Job Number": "D6618", "Part": "MS14155-4", "MinOper": 31, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-GRIND"}, {"Company": "AI", "Job Number": "D7111", "Part": "A0202013D6568-125", "MinOper": 26, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-GRIND"}, {"Company": "AI", "Job Number": "SH5135", "Part": "B0202013D8164-63", "MinOper": 26, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-GRIND"}, {"Company": "AI", "Job Number": "100572", "Part": "MS20002-6", "MinOper": 50, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-HT"}, {"Company": "AI", "Job Number": "100574", "Part": "MS20002-6", "MinOper": 50, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-HT"}, {"Company": "AI", "Job Number": "100575", "Part": "MS20002-6", "MinOper": 50, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-HT"}, {"Company": "AI", "Job Number": "D4761", "Part": "BACW10P300W", "MinOper": 25, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-HT"}, {"Company": "AI", "Job Number": "D5939", "Part": "MS14177-7", "MinOper": 46, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-HT"}, {"Company": "AI", "Job Number": "D5442", "Part": "ABS1852BB6", "MinOper": 51, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-IVD"}, {"Company": "AI", "Job Number": "D5443", "Part": "ABS1852BB4", "MinOper": 51, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-IVD"}, {"Company": "AI", "Job Number": "D6450", "Part": "NSA5379-5CV", "MinOper": 34, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-IVD"}, {"Company": "AI", "Job Number": "D6460", "Part": "ABS1758E0432V", "MinOper": 12, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-IVD"}, {"Company": "AI", "Job Number": "SH3859", "Part": "NSA5379-6CV", "MinOper": 10, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-IVD"}, {"Company": "AI", "Job Number": "D6564", "Part": "AS4987NP3", "MinOper": 27, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-LPI"}, {"Company": "AI", "Job Number": "D7440", "Part": "MS14183L-C5", "MinOper": 12, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-LPI"}, {"Company": "AI", "Job Number": "D5548", "Part": "NAS1169-10", "MinOper": 31, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-MICROH"}, {"Company": "AI", "Job Number": "100186", "Part": "NAS1149V0363M", "MinOper": 70, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-SOLTRA"}, {"Company": "AI", "Job Number": "D6912", "Part": "BACW10BX14LK", "MinOper": 30, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-SOLTRA"}, {"Company": "AI", "Job Number": "D6946", "Part": "NAS1149V0532H", "MinOper": 33, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-SOLTRA"}, {"Company": "AI", "Job Number": "100048", "Part": "AN961-10T", "MinOper": 50, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-TIN"}, {"Company": "AI", "Job Number": "100051", "Part": "AN961-10T", "MinOper": 50, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-TIN"}, {"Company": "AI", "Job Number": "D6769", "Part": "AN961-416T", "MinOper": 22, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-TIN"}, {"Company": "AI", "Job Number": "D7006", "Part": "NSA5372EW516C", "MinOper": 22, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-TNSILE"}, {"Company": "AI", "Job Number": "D7010", "Part": "NSA5379-3CW", "MinOper": 21, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-TNSILE"}, {"Company": "AI", "Job Number": "D7072", "Part": "NAS1169C10L", "MinOper": 26, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-TNSILE"}, {"Company": "AI", "Job Number": "D7073", "Part": "NAS1169C10L", "MinOper": 26, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-TNSILE"}, {"Company": "AI", "Job Number": "D7075", "Part": "NAS1169C10L", "MinOper": 26, "ResourceGrpID": "OSP", "Resource Group": "Outside Process", "Operation": "O-TNSILE"}], "PRESS": [{"Company": "AI", "Job Number": "100021", "Part": "ASNA0113-64CA", "MinOper": 30, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKP"}, {"Company": "AI", "Job Number": "100035", "Part": "BACF3F009R017NN-SPL", "MinOper": 40, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKP"}, {"Company": "AI", "Job Number": "100056", "Part": "JSFW03-10V", "MinOper": 30, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKP"}, {"Company": "AI", "Job Number": "100057", "Part": "MS15795-444", "MinOper": 30, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKP"}, {"Company": "AI", "Job Number": "100059", "Part": "MS15795-807", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKP"}, {"Company": "AI", "Job Number": "100071", "Part": "NAS1149E0332R", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKP"}, {"Company": "AI", "Job Number": "100072", "Part": "NAS463XDD416G", "MinOper": 30, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKP"}, {"Company": "AI", "Job Number": "100073", "Part": "NAS1587-16C", "MinOper": 30, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKP"}, {"Company": "AI", "Job Number": "100076", "Part": "NAS1149DN416K", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKP"}, {"Company": "AI", "Job Number": "100082", "Part": "NAS1149D0332K", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKP"}, {"Company": "AI", "Job Number": "100607", "Part": "BACW10BP4C", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPC"}, {"Company": "AI", "Job Number": "100608", "Part": "BACW10BP4C", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPC"}, {"Company": "AI", "Job Number": "100610", "Part": "BACW10BP4C", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPC"}, {"Company": "AI", "Job Number": "100612", "Part": "BACW10BP4C", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPC"}, {"Company": "AI", "Job Number": "100909", "Part": "MS20002C4", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPC"}, {"Company": "AI", "Job Number": "100910", "Part": "MS20002C4", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPC"}, {"Company": "AI", "Job Number": "100911", "Part": "MS20002C4", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPC"}, {"Company": "AI", "Job Number": "100912", "Part": "MS20002C4", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPC"}, {"Company": "AI", "Job Number": "100919", "Part": "MS20002C4", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPC"}, {"Company": "AI", "Job Number": "100337", "Part": "1002710089-001", "MinOper": 30, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPF"}, {"Company": "AI", "Job Number": "100450", "Part": "NAS1169C10", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPF"}, {"Company": "AI", "Job Number": "100451", "Part": "NAS1169C10", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPF"}, {"Company": "AI", "Job Number": "100452", "Part": "NAS1169C10", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPF"}, {"Company": "AI", "Job Number": "100453", "Part": "NAS1169C10", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPF"}, {"Company": "AI", "Job Number": "100455", "Part": "NAS1169C10", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPF"}, {"Company": "AI", "Job Number": "100456", "Part": "NAS1169C10", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPF"}, {"Company": "AI", "Job Number": "100457", "Part": "NAS1169C10", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPF"}, {"Company": "AI", "Job Number": "100470", "Part": "STD3018K11", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPF"}, {"Company": "AI", "Job Number": "100472", "Part": "STD3018K11", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BKPF"}, {"Company": "AI", "Job Number": "100116", "Part": "B0202013P6456-60", "MinOper": 30, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BLANK"}, {"Company": "AI", "Job Number": "101267", "Part": "141W8118-3", "MinOper": 30, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BLANK"}, {"Company": "AI", "Job Number": "101147", "Part": "ARW100N-CP", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BLNKPRCS"}, {"Company": "AI", "Job Number": "101148", "Part": "ARW100N-CP", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BLNKPRCS"}, {"Company": "AI", "Job Number": "101149", "Part": "ARW100N-CP", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BLNKPRCS"}, {"Company": "AI", "Job Number": "101150", "Part": "ARW100N-CP", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BLNKPRCS"}, {"Company": "AI", "Job Number": "101151", "Part": "ARW100N-CP", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BLNKPRCS"}, {"Company": "AI", "Job Number": "101152", "Part": "ARW100N-CP", "MinOper": 20, "ResourceGrpID": "PRESS", "Resource Group": "PRESS", "Operation": "BLNKPRCS"}], "LINSP": [{"Company": "AI", "Job Number": "100197", "Part": "NAS1149E0863P", "MinOper": 60, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "HARD-V"}, {"Company": "AI", "Job Number": "100284", "Part": "NAS1149E0363R", "MinOper": 60, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "HARD-V"}, {"Company": "AI", "Job Number": "100294", "Part": "NAS1149E0363R", "MinOper": 60, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "HARD-V"}, {"Company": "AI", "Job Number": "100374", "Part": "BACW10BP5PK", "MinOper": 60, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "HARD-V"}, {"Company": "AI", "Job Number": "100425", "Part": "BACW10BP14APU", "MinOper": 60, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "HARD-V"}, {"Company": "AI", "Job Number": "100400", "Part": "S8157N53-005", "MinOper": 60, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "INSP-FIN"}, {"Company": "AI", "Job Number": "100520", "Part": "A0202025-8XK", "MinOper": 50, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "INSP-FIN"}, {"Company": "AI", "Job Number": "100530", "Part": "A0202049VP9T", "MinOper": 50, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "INSP-FIN"}, {"Company": "AI", "Job Number": "100537", "Part": "S8154-160C005", "MinOper": 60, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "INSP-FIN"}, {"Company": "AI", "Job Number": "101176", "Part": "NAS1149E0916R", "MinOper": 120, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "INSP-FIN"}, {"Company": "AI", "Job Number": "100706", "Part": "NAS1149F0332P", "MinOper": 50, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "INSP-IN"}, {"Company": "AI", "Job Number": "100824", "Part": "NAS620-10", "MinOper": 40, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "INSP-IN"}, {"Company": "AI", "Job Number": "100825", "Part": "NAS620-10", "MinOper": 40, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "INSP-IN"}, {"Company": "AI", "Job Number": "101220", "Part": "BACF3F008-017NN-27A", "MinOper": 20, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "INSP-IN"}, {"Company": "AI", "Job Number": "500938-1-1", "Part": "P-CBLIA0002-01", "MinOper": 60, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "INSP-IN"}, {"Company": "AI", "Job Number": "100180", "Part": "NAS1169-6", "MinOper": 10, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "VERIFY-P"}, {"Company": "AI", "Job Number": "100340", "Part": "BACS18AY2", "MinOper": 10, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "VERIFY-P"}, {"Company": "AI", "Job Number": "100468", "Part": "NAS1169-8", "MinOper": 10, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "VERIFY-P"}, {"Company": "AI", "Job Number": "100471", "Part": "NAS1169DD10", "MinOper": 10, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "VERIFY-P"}, {"Company": "AI", "Job Number": "100623", "Part": "NAS1193K9CF", "MinOper": 10, "ResourceGrpID": "LINSP", "Resource Group": "INSPECTOR", "Operation": "VERIFY-P"}]}
+;
+
+const TABLE_META = {
+  OSP:   { label: 'Outside Process', color: '#c0501e', lightBg: 'rgba(192,80,30,0.08)', lightText: '#8b3010' },
+  PRESS: { label: 'Press',           color: '#1a6b3a', lightBg: 'rgba(26,107,58,0.08)', lightText: '#0e4826' },
+  LINSP: { label: 'Inspector',       color: '#1a4b8c', lightBg: 'rgba(26,75,140,0.08)', lightText: '#0f3266' },
+};
+
+// Deep clone initial data
+const initData = JSON.parse(JSON.stringify(RAW_DATA));
+const state = JSON.parse(JSON.stringify(RAW_DATA));
+
+let drag = { on: false, rowIdx: null, src: null, rowData: null };
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  const ws = document.getElementById('workspace');
+  ws.innerHTML = '';
+  Object.keys(TABLE_META).forEach(tid => ws.appendChild(buildPanel(tid)));
+  renderStats();
+}
+
+function buildPanel(tid) {
+  const meta = TABLE_META[tid];
+  const rows = state[tid];
+
+  // Unique operations for subtitle
+  const ops = [...new Set(rows.map(r => r.Operation))].slice(0, 4).join(', ');
+
+  const panel = document.createElement('div');
+  panel.className = 'table-panel';
+  panel.dataset.tid = tid;
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div class="accent-stripe" style="background:${meta.color}"></div>
+      <div class="header-info">
+        <div class="table-id" style="color:${meta.color}">${tid}</div>
+        <div class="table-fullname">${meta.label}</div>
+        <div class="table-ops">${ops}${rows.length > 4 ? ' …' : ''}</div>
+      </div>
+      <div class="row-counter" id="rcount-${tid}">${rows.length}</div>
+    </div>
+    <div class="col-header">
+      <span></span><span>Job #</span><span>Part</span><span>Operation</span><span>MinOper</span>
+    </div>
+    <div class="panel-body" id="body-${tid}"></div>
+  `;
+
+  renderBody(tid, panel.querySelector('.panel-body'));
+
+  panel.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    panel.classList.add('drag-over');
+  });
+  panel.addEventListener('dragleave', e => {
+    if (!panel.contains(e.relatedTarget)) panel.classList.remove('drag-over');
+  });
+  panel.addEventListener('drop', e => {
+    e.preventDefault();
+    panel.classList.remove('drag-over');
+    if (!drag.on || drag.src === tid) return;
+    moveRow(drag.rowIdx, drag.src, tid);
+  });
+
+  return panel;
+}
+
+function renderBody(tid, bodyEl) {
+  bodyEl.innerHTML = '';
+  const rows = state[tid];
+  const meta = TABLE_META[tid];
+
+  if (rows.length === 0) {
+    bodyEl.innerHTML = '<div class="empty-state"><div class="empty-icon">○</div><span>Drop rows here</span></div>';
+    return;
+  }
+
+  rows.forEach((row, idx) => {
+    const el = document.createElement('div');
+    el.className = 'data-row';
+    el.draggable = true;
+
+    el.innerHTML = `
+      <span class="grip">⠿</span>
+      <span class="cell-job">${row['Job Number']}</span>
+      <span class="cell-part">${row['Part']}</span>
+      <span class="op-badge" style="background:${meta.lightBg};color:${meta.lightText}">${row['Operation']}</span>
+      <span class="cell-minoper">${row['MinOper']}</span>
+    `;
+
+    el.addEventListener('dragstart', e => {
+      drag = { on: true, rowIdx: idx, src: tid, rowData: row };
+      el.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      const c = document.createElement('canvas'); c.width = c.height = 1;
+      e.dataTransfer.setDragImage(c, 0, 0);
+      document.getElementById('ph-job').textContent = row['Job Number'];
+      document.getElementById('ph-part').textContent = row['Part'];
+      document.getElementById('phantom').classList.add('show');
+    });
+
+    el.addEventListener('dragend', () => {
+      el.classList.remove('is-dragging');
+      document.getElementById('phantom').classList.remove('show');
+      document.querySelectorAll('.table-panel').forEach(p => p.classList.remove('drag-over'));
+      drag = { on: false };
+    });
+
+    bodyEl.appendChild(el);
+  });
+}
+
+// Track mouse for phantom
+document.addEventListener('dragover', e => {
+  const ph = document.getElementById('phantom');
+  if (ph.classList.contains('show')) {
+    ph.style.left = (e.clientX + 14) + 'px';
+    ph.style.top  = (e.clientY - 24) + 'px';
+  }
+});
+
+// ── Move ─────────────────────────────────────────────────────────────────────
+function moveRow(rowIdx, srcId, destId) {
+  const [row] = state[srcId].splice(rowIdx, 1);
+  row['ResourceGrpID'] = destId;
+  row['Resource Group'] = TABLE_META[destId].label;
+  state[destId].push(row);
+
+  const srcBody  = document.getElementById('body-' + srcId);
+  const destBody = document.getElementById('body-' + destId);
+  renderBody(srcId, srcBody);
+  renderBody(destId, destBody);
+  document.getElementById('rcount-' + srcId).textContent  = state[srcId].length;
+  document.getElementById('rcount-' + destId).textContent = state[destId].length;
+  renderStats();
+
+  // brief flash
+  destBody.style.transition = 'background 0.08s';
+  destBody.style.background = '#edf3ff';
+  setTimeout(() => destBody.style.background = '', 380);
+
+  drag = { on: false };
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+function renderStats() {
+  document.getElementById('stats-row').innerHTML = Object.keys(TABLE_META).map(tid =>
+    `<div class="stat">
+      <div class="stat-dot" style="background:${TABLE_META[tid].color}"></div>
+      ${tid}: <strong>${state[tid].length}</strong>
+    </div>`
+  ).join('');
+}
+
+// ── Toolbar ───────────────────────────────────────────────────────────────────
+function resetAll() {
+  Object.keys(state).forEach(k => { state[k] = JSON.parse(JSON.stringify(initData[k])); });
+  render();
+}
+
+function sortByJob() {
+  Object.keys(state).forEach(k => {
+    state[k].sort((a, b) => String(a['Job Number']).localeCompare(String(b['Job Number']), undefined, {numeric: true}));
+  });
+  Object.keys(TABLE_META).forEach(tid => {
+    const body = document.getElementById('body-' + tid);
+    if (body) renderBody(tid, body);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
